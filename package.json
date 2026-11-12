@@ -1,9 +1,9 @@
 {
   "name": "dc-addon",
   "version": "1.1.0",
-  "main": "src/addon.js",
+  "main": "src/start.js",
   "scripts": {
-    "start": "node src/addon.js",
+    "start": "node src/start.js",
     "start:server": "node src/start.js"
   },
   "dependencies": {
