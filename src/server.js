@@ -14,6 +14,7 @@ const supermanAnimationData = require('../Data/everythingsupermananimation');
 const dceuMoviesData = require('../Data/DCEUMovies');
 const modernDCSeriesData = require('../Data/DCSeries');
 const getNewDcReleases = require('./newDcCatalog');
+const getDcuUniverse = require('./dcuUniverseCatalog');
 
 require('dotenv').config();
 
@@ -244,6 +245,11 @@ function getAllCatalogs() {
         },
         {
             type: "DC",
+            id: "dcu-universe",
+            name: "DCU Universe"
+        },
+        {
+            type: "DC",
             id: "dc-chronological",
             name: "Chronological Order"
         },
@@ -437,6 +443,13 @@ app.get('/api/catalogs', (req, res) => {
             description: 'Filmes e séries recentes da DC atualizados automaticamente pelo TMDb',
             icon: 'sparkles'
         },
+        {
+            id: 'dcu-universe',
+            name: 'DCU Universe',
+            category: 'Universo',
+            description: 'Filmes e séries da continuidade compartilhada do novo DCU',
+            icon: 'clapperboard'
+        },
         { 
             id: 'dc-chronological', 
             name: 'Chronological Order', 
@@ -531,6 +544,16 @@ app.get('/rpdb/:rpdbKey/catalog/:type/:id.json', async (req, res) => {
         } catch (error) {
             console.error('Error loading new DC releases:', error.message);
             return res.status(502).json({ metas: [], error: 'Não foi possível consultar as novidades da DC no TMDb.' });
+        }
+    }
+
+    if (id === 'dcu-universe') {
+        try {
+            const metas = await getDcuUniverse(tmdbKey);
+            return res.json({ metas });
+        } catch (error) {
+            console.error('Error loading DCU Universe:', error.message);
+            return res.status(502).json({ metas: [], error: 'Não foi possível consultar o catálogo DCU Universe no TMDb.' });
         }
     }
 
@@ -630,6 +653,16 @@ app.get('/catalog/:catalogsParam/catalog/:type/:id.json', async (req, res) => {
         console.log(`RPDB key detected: ${rpdbKey}`);
     }
     
+    if (id === 'dcu-universe') {
+        try {
+            const metas = await getDcuUniverse(tmdbKey);
+            return res.json({ metas });
+        } catch (error) {
+            console.error('Error loading DCU Universe:', error.message);
+            return res.status(502).json({ metas: [], error: 'Não foi possível consultar o catálogo DCU Universe no TMDb.' });
+        }
+    }
+
     // Check cache
     const cacheKey = `custom-${id}-${catalogsParam}`;
     if (cachedCatalog[cacheKey]) {
@@ -745,6 +778,16 @@ app.get('/catalog/:type/:id.json', async (req, res) => {
         console.log(`RPDB key detected: ${rpdbKey}`);
     }
     
+    if (id === 'dcu-universe') {
+        try {
+            const metas = await getDcuUniverse(tmdbKey);
+            return res.json({ metas });
+        } catch (error) {
+            console.error('Error loading DCU Universe:', error.message);
+            return res.status(502).json({ metas: [], error: 'Não foi possível consultar o catálogo DCU Universe no TMDb.' });
+        }
+    }
+
     // Check cache
     const cacheKey = `default-${id}`;
     if (cachedCatalog[cacheKey]) {
