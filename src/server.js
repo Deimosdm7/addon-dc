@@ -236,6 +236,49 @@ async function fetchAdditionalData(item) {
 }
 
 // Get all available catalogs
+
+async function mergeDcuItemsIntoCatalog(catalogId, dataSource) {
+    const categories = {
+        'dc-movies': ['movie'],
+        'dc-series': ['series'],
+        'dc_modern_series': ['series'],
+        'dc-release': ['movie', 'series'],
+        'dc-chronological': ['movie', 'series']
+    };
+    const allowedTypes = categories[catalogId];
+    if (!allowedTypes || !Array.isArray(dataSource)) return dataSource;
+
+    const dcuMetas = await getDcuUniverse(tmdbKey);
+    const additions = dcuMetas
+        .filter(meta => allowedTypes.includes(meta.type))
+        .map(meta => {
+            const match = meta.id.match(/tmdb_(\d+)$/);
+            if (!match) return null;
+            return {
+                tmdbId: Number(match[1]),
+                title: meta.name,
+                type: meta.type,
+                id: `tmdb_${match[1]}`,
+                releaseYear: meta.releaseInfo || '',
+                poster: meta.poster,
+                overview: meta.description,
+                ratings: [],
+                genres: []
+            };
+        })
+        .filter(item => item && !dataSource.some(existing =>
+            String(existing.tmdbId) === String(item.tmdbId) ||
+            (existing.title && existing.title.toLowerCase() === item.title.toLowerCase() &&
+             existing.releaseYear === item.releaseYear)
+        ));
+
+    const merged = [...dataSource, ...additions];
+    if (catalogId === 'dc-release') {
+        merged.sort((a, b) => String(a.releaseYear || '').localeCompare(String(b.releaseYear || '')));
+    }
+    return merged;
+}
+
 function getAllCatalogs() {
     return [
         {
@@ -611,6 +654,8 @@ app.get('/rpdb/:rpdbKey/catalog/:type/:id.json', async (req, res) => {
                 return res.json({ metas: [] });
         }
         
+        dataSource = await mergeDcuItemsIntoCatalog(id, dataSource);
+
         if (!Array.isArray(dataSource)) {
             throw new Error(`Data source for ID ${id} is not a valid array.`);
         }
@@ -721,6 +766,8 @@ app.get('/catalog/:catalogsParam/catalog/:type/:id.json', async (req, res) => {
                 return res.json({ metas: [] });
         }
         
+        dataSource = await mergeDcuItemsIntoCatalog(id, dataSource);
+
         if (!Array.isArray(dataSource)) {
             throw new Error(`Data source for ID ${id} is not a valid array.`);
         }
@@ -846,6 +893,8 @@ app.get('/catalog/:type/:id.json', async (req, res) => {
                 return res.json({ metas: [] });
         }
         
+        dataSource = await mergeDcuItemsIntoCatalog(id, dataSource);
+
         if (!Array.isArray(dataSource)) {
             throw new Error(`Data source for ID ${id} is not a valid array.`);
         }
