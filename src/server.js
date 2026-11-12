@@ -430,6 +430,13 @@ app.get('/api/catalogs', (req, res) => {
     console.log('Catalog info requested');
     
     const catalogInfo = [
+        {
+            id: 'dc-new-releases',
+            name: 'Novidades DC',
+            category: 'Automático',
+            description: 'Filmes e séries recentes da DC atualizados automaticamente pelo TMDb',
+            icon: 'sparkles'
+        },
         { 
             id: 'dc-chronological', 
             name: 'Chronological Order', 
