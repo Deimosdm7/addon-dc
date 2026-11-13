@@ -925,21 +925,52 @@ app.get('/catalog/:type/:id.json', async (req, res) => {
     return res.json(cachedCatalog[cacheKey]);
 });
 
-// Metadata endpoint for DCU Universe items with custom DC IDs
+// Metadata endpoint for DCU Universe items with custom TMDb IDs
 app.get('/meta/:type/:id.json', async (req, res) => {
     const { type, id } = req.params;
-    if (id.startsWith('dc_')) {
-        try {
-            const metas = await getDcuUniverse(tmdbKey);
-            const meta = metas.find(item => item.id === id && item.type === type);
-            if (!meta) return res.status(404).json({ meta: null });
-            return res.json({ meta });
-        } catch (error) {
-            console.error('Error loading DCU metadata:', error.message);
-            return res.status(502).json({ meta: null });
-        }
+    const match = id.match(/^dc_(movie|tv)_tmdb_(\\d+)$/);
+
+    if (!match) {
+        return res.status(404).json({ meta: null });
     }
-    return res.status(404).json({ meta: null });
+
+    const [, contentType, tmdbId] = match;
+    const expectedStremioType = contentType === 'tv' ? 'series' : 'movie';
+
+    if (type !== expectedStremioType) {
+        return res.status(404).json({ meta: null });
+    }
+
+    if (!tmdbKey) {
+        return res.status(503).json({ meta: null, error: 'TMDB_API_KEY não configurada.' });
+    }
+
+    try {
+        const endpoint = contentType === 'tv' ? 'tv' : 'movie';
+        const response = await axios.get(`https://api.themoviedb.org/3/${endpoint}/${tmdbId}`, {
+            params: { api_key: tmdbKey, language: 'pt-BR', append_to_response: 'credits' }
+        });
+        const item = response.data;
+        const releaseDate = item.release_date || item.first_air_date || '';
+
+        return res.json({
+            meta: {
+                id,
+                type: expectedStremioType,
+                name: item.title || item.name,
+                poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+                background: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
+                description: item.overview || 'Sem descrição disponível.',
+                releaseInfo: releaseDate.slice(0, 4),
+                genres: (item.genres || []).map(genre => genre.name),
+                runtime: item.runtime || undefined,
+                cast: (item.credits?.cast || []).slice(0, 10).map(person => person.name)
+            }
+        });
+    } catch (error) {
+        console.error(`Error loading DCU metadata for ${id}:`, error.response?.data || error.message);
+        return res.status(error.response?.status === 404 ? 404 : 502).json({ meta: null });
+    }
 });
 
 // Default routes
