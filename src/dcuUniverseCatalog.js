@@ -14,7 +14,13 @@ const titles = [
   { title: 'Clayface', type: 'movie' },
   { title: 'Man of Tomorrow', type: 'movie' },
   { title: 'The People v. Gorilla Grodd', type: 'tv' },
-  { title: 'Mister Miracle', type: 'tv' }
+  { title: 'Mister Miracle', type: 'tv' },
+  { title: 'Man of Tomorrow', type: 'movie' },
+  { title: 'The Brave and the Bold', type: 'movie' },
+  { title: 'Swamp Thing', type: 'movie' },
+  { title: 'The Authority', type: 'movie' },
+  { title: 'Booster Gold', type: 'tv' },
+  { title: 'Creature Commandos', type: 'tv' }
 ];
 
 function normalize(value) {
