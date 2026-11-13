@@ -399,7 +399,7 @@ app.get('/catalog/:catalogsParam/manifest.json', (req, res) => {
         logo: "https://github.com/tapframe/addon-dc/blob/main/assets/icon.png?raw=true",
         background: "https://github.com/tapframe/addon-dc/blob/main/assets/background.jpg?raw=true",
         catalogs: selectedApiCatalogs,
-        resources: ["catalog"],
+        resources: ["catalog", "meta"],
         types: ["movie", "series"],
         idPrefixes: ["dc_"],
         behaviorHints: {
@@ -434,7 +434,7 @@ app.get('/manifest.json', (req, res) => {
         logo: "https://github.com/tapframe/addon-dc/blob/main/assets/icon.png?raw=true",
         background: "https://github.com/tapframe/addon-dc/blob/main/assets/background.jpg?raw=true",
         catalogs: getAllCatalogs(),
-        resources: ["catalog"],
+        resources: ["catalog", "meta"],
         types: ["movie", "series"],
         idPrefixes: ["dc_"],
         behaviorHints: {
@@ -462,7 +462,7 @@ app.get('/rpdb/:rpdbKey/manifest.json', (req, res) => {
         logo: "https://github.com/tapframe/addon-dc/blob/main/assets/icon.png?raw=true",
         background: "https://github.com/tapframe/addon-dc/blob/main/assets/background.jpg?raw=true",
         catalogs: getAllCatalogs(),
-        resources: ["catalog"],
+        resources: ["catalog", "meta"],
         types: ["movie", "series"],
         idPrefixes: ["dc_"],
         behaviorHints: {
@@ -923,6 +923,23 @@ app.get('/catalog/:type/:id.json', async (req, res) => {
     
     // Return the data
     return res.json(cachedCatalog[cacheKey]);
+});
+
+// Metadata endpoint for DCU Universe items with custom DC IDs
+app.get('/meta/:type/:id.json', async (req, res) => {
+    const { type, id } = req.params;
+    if (id.startsWith('dc_')) {
+        try {
+            const metas = await getDcuUniverse(tmdbKey);
+            const meta = metas.find(item => item.id === id && item.type === type);
+            if (!meta) return res.status(404).json({ meta: null });
+            return res.json({ meta });
+        } catch (error) {
+            console.error('Error loading DCU metadata:', error.message);
+            return res.status(502).json({ meta: null });
+        }
+    }
+    return res.status(404).json({ meta: null });
 });
 
 // Default routes
