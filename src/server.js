@@ -905,7 +905,7 @@ app.get('/catalog/:type/:id.json', async (req, res) => {
 // Metadata endpoint for DCU Universe items with custom TMDb IDs
 app.get('/meta/:type/:id.json', async (req, res) => {
     const { type, id } = req.params;
-    const match = id.match(/^dc_(movie|tv)_tmdb_(\\d+)$/);
+    const match = id.match(/^dc_(movie|tv)_tmdb_(\d+)$/);
 
     if (!match) {
         return res.status(404).json({ meta: null });
