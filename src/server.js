@@ -43,7 +43,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Cache for 3 weeks
 app.use((req, res, next) => {
-    res.setHeader('Cache-Control', 'public, max-age=1814400');
+    if (req.path.startsWith('/meta/')) {
+        res.setHeader('Cache-Control', 'no-store');
+    } else {
+        res.setHeader('Cache-Control', 'public, max-age=1814400');
+    }
     next();
 });
 
