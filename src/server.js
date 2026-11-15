@@ -399,7 +399,7 @@ app.get('/catalog/:catalogsParam/manifest.json', (req, res) => {
         catalogs: selectedApiCatalogs,
         resources: ["catalog", "meta"],
         types: ["movie", "series"],
-        idPrefixes: ["dc_"],
+        idPrefixes: ["dc_", "tmdb_"],
         behaviorHints: {
             configurable: true
         },
@@ -434,7 +434,7 @@ app.get('/manifest.json', (req, res) => {
         catalogs: getAllCatalogs(),
         resources: ["catalog", "meta"],
         types: ["movie", "series"],
-        idPrefixes: ["dc_"],
+        idPrefixes: ["dc_", "tmdb_"],
         behaviorHints: {
             configurable: true
         },
@@ -462,7 +462,7 @@ app.get('/rpdb/:rpdbKey/manifest.json', (req, res) => {
         catalogs: getAllCatalogs(),
         resources: ["catalog", "meta"],
         types: ["movie", "series"],
-        idPrefixes: ["dc_"],
+        idPrefixes: ["dc_", "tmdb_"],
         behaviorHints: {
             configurable: true
         },
@@ -907,15 +907,17 @@ app.get('/catalog/:type/:id.json', async (req, res) => {
 });
 
 // Metadata endpoint for DCU Universe items with custom TMDb IDs
+// Aceita "dc_movie_tmdb_123", "dc_tv_tmdb_123" e "tmdb_123"
 app.get('/meta/:type/:id.json', async (req, res) => {
     const { type, id } = req.params;
-    const match = id.match(/^dc_(movie|tv)_tmdb_(\d+)$/);
+    const match = id.match(/^(?:dc_(movie|tv)_)?tmdb_(\d+)$/);
 
     if (!match) {
         return res.status(404).json({ meta: null });
     }
 
-    const [, contentType, tmdbId] = match;
+    const tmdbId = match[2];
+    const contentType = match[1] || (type === 'series' ? 'tv' : 'movie');
     const expectedStremioType = contentType === 'tv' ? 'series' : 'movie';
 
     if (type !== expectedStremioType) {
@@ -949,11 +951,10 @@ app.get('/meta/:type/:id.json', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error(`Error loading DCU metadata for ${id}:`, error.response?.data || error.message);
+        console.error(`Error loading metadata for ${id}:`, error.response?.data || error.message);
         return res.status(error.response?.status === 404 ? 404 : 502).json({ meta: null });
     }
 });
-
 // Default routes
 app.get('/', (req, res) => {
     res.redirect('/configure');
