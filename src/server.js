@@ -13,7 +13,6 @@ const supermanData = require('../Data/everythingsuperman');
 const supermanAnimationData = require('../Data/everythingsupermananimation');
 const dceuMoviesData = require('../Data/DCEUMovies');
 const modernDCSeriesData = require('../Data/DCSeries');
-const getNewDcReleases = require('./newDcCatalog');
 const getDcuUniverse = require('./dcuUniverseCatalog');
 
 require('dotenv').config();
@@ -283,11 +282,6 @@ function getAllCatalogs() {
     return [
         {
             type: "DC",
-            id: "dc-new-releases",
-            name: "Novidades DC"
-        },
-        {
-            type: "DC",
             id: "dcu-universe",
             name: "DCU Universe"
         },
@@ -480,13 +474,6 @@ app.get('/api/catalogs', (req, res) => {
     
     const catalogInfo = [
         {
-            id: 'dc-new-releases',
-            name: 'Novidades DC',
-            category: 'Automático',
-            description: 'Filmes e séries recentes da DC atualizados automaticamente pelo TMDb',
-            icon: 'sparkles'
-        },
-        {
             id: 'dcu-universe',
             name: 'DCU Universe',
             category: 'Universo',
@@ -580,16 +567,6 @@ app.get('/rpdb/:rpdbKey/catalog/:type/:id.json', async (req, res) => {
     const { rpdbKey, type, id } = req.params;
     console.log(`RPDB path-based catalog requested - Type: ${type}, ID: ${id}, RPDB Key: ${rpdbKey}`);
     
-    if (id === 'dc-new-releases') {
-        try {
-            const metas = await getNewDcReleases(tmdbKey);
-            return res.json({ metas });
-        } catch (error) {
-            console.error('Error loading new DC releases:', error.message);
-            return res.status(502).json({ metas: [], error: 'Não foi possível consultar as novidades da DC no TMDb.' });
-        }
-    }
-
     if (id === 'dcu-universe') {
         try {
             const metas = await getDcuUniverse(tmdbKey);
